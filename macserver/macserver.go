@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
@@ -44,25 +45,28 @@ func hmacServer(t io.ReadWriter, hmacKeyFile string, bind string) {
 		panic(e)
 	}
 	http.HandleFunc("/hmac", func(w http.ResponseWriter, r *http.Request) {
-		buf := make([]byte, 0, 1024)
-		l, e := r.Body.Read(buf)
+		d, e := ioutil.ReadAll(r.Body)
 		if e != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprintf(w, "error reading request: %v", e)
 			return
 		}
-		if l > 128 {
+		if len(d) > 128 {
 			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprintf(w, "request too long")
 			return
+		} else if len(d) == 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintf(w, "request length is zero")
+			return
 		}
 		time0 := time.Now()
-		if b, e := hmacer.Hmac(buf[:l]); e != nil {
+		if b, e := hmacer.Hmac(d); e != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "error computing hmac: %v", e)
 			return
 		} else {
-			fmt.Printf("hmac computed in data len(%v) in: %v\n", l, time.Since(time0))
+			fmt.Printf("hmac computed in data len(%v) in: %v\n", len(d), time.Since(time0))
 			w.WriteHeader(http.StatusOK)
 			w.Write(b)
 		}
