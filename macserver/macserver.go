@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/google/go-tpm/tpm2"
 	"github.com/pkteer/tpm-util/mac"
@@ -36,8 +37,8 @@ func readFile(file string) string {
 	return buf.String()
 }
 
-func hmacServer(t io.ReadWriter, hmacKeyFile string) {
-	hmacer, e := mac.MakeHmacer(t, readFile(hmacKeyFile))
+func hmacServer(t io.ReadWriter, hmacKeyFile string, bind string) {
+	hmacer, e := mac.MakeHmacer(t, strings.TrimSpace(readFile(hmacKeyFile)))
 	if e != nil {
 		panic(e)
 	}
@@ -63,6 +64,8 @@ func hmacServer(t io.ReadWriter, hmacKeyFile string) {
 			w.Write([]byte(b))
 		}
 	})
+	fmt.Fprintf(os.Stderr, "Listening on %s\n", bind)
+	http.ListenAndServe(bind, nil)
 }
 
 func hmacImportKey(t io.ReadWriter, hmacKeyFile string) {
@@ -76,14 +79,18 @@ func hmacImportKey(t io.ReadWriter, hmacKeyFile string) {
 func main() {
 	t := getTpm()
 	cmd := ""
+	bind := "localhost:9999"
 	if len(os.Args) > 2 {
 		cmd = os.Args[1]
+	}
+	if len(os.Args) > 3 {
+		bind = os.Args[3]
 	}
 	switch cmd {
 	case "import":
 		hmacImportKey(t, os.Args[2])
 	case "serv":
-		hmacServer(t, os.Args[2])
+		hmacServer(t, os.Args[2], bind)
 	default:
 		fmt.Println("usage: macserver [import|serv] filename")
 	}
