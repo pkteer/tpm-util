@@ -29,3 +29,16 @@ begins an http server.
 * `/hmac`
   * POST body must be less than or equal to 128 bytes in length
   * Result: The hmac of the secret value added with `import` plus the posted value.
+
+### Example
+
+```
+# echo 'test secret' | ./bin/macserver import - > ~/tpm_locked_secret.hex
+# ./bin/macserver serv ~/tpm_locked_secret.hex localhost:9999
+
+## In another window
+# curl -s -X POST -d 'hello world' localhost:9999/hmac | hexdump
+0000000 fc85 9246 f5d6 71b3 0963 e858 a12b b5ed
+0000010 7b34 5d23 ad34 aa17 dcf8 6745 16c9 faae
+0000020
+```
