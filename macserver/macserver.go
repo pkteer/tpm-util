@@ -23,7 +23,7 @@ func getTpm() io.ReadWriteCloser {
 	return t
 }
 
-func readFile(file string) string {
+func readFileHex(file string) []byte {
 	var f *os.File
 	if file == "-" {
 		f = os.Stdin
@@ -37,11 +37,16 @@ func readFile(file string) string {
 	}
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(f)
-	return buf.String()
+	hexData := strings.TrimSpace(buf.String())
+	bytes, e := hex.DecodeString(hexData)
+	if e != nil {
+		panic(e)
+	}
+	return bytes
 }
 
 func hmacServer(t io.ReadWriter, hmacKeyFile string, bind string) {
-	hmacer, e := mac.MakeHmacer(t, strings.TrimSpace(readFile(hmacKeyFile)))
+	hmacer, e := mac.MakeHmacer(t, readFileHex(hmacKeyFile))
 	if e != nil {
 		panic(e)
 	}
@@ -77,11 +82,7 @@ func hmacServer(t io.ReadWriter, hmacKeyFile string, bind string) {
 }
 
 func hmacImportKey(t io.ReadWriter, hmacKeyFile string) {
-	keyHex := readFile(hmacKeyFile)
-	keyBytes, e := hex.DecodeString(keyHex)
-	if e != nil {
-		panic(e)
-	}
+	keyBytes := readFileHex(hmacKeyFile)
 	if len(keyBytes) != 32 {
 		panic("key length is not 32 bytes")
 	}

@@ -60,12 +60,8 @@ func ImportKey(rwc io.ReadWriter, secret []byte) (string, error) {
 	return hex.EncodeToString(ekhBytes), nil
 }
 
-func MakeHmacer(tpm io.ReadWriter, key string) (*Hmacer, error) {
-	ekh, err := hex.DecodeString(key)
-	if err != nil {
-		return nil, err
-	}
-	newHandle, err := tpm2.ContextLoad(tpm, ekh)
+func MakeHmacer(tpm io.ReadWriter, key []byte) (*Hmacer, error) {
+	newHandle, err := tpm2.ContextLoad(tpm, key)
 	if err != nil {
 		return nil, fmt.Errorf("ContextLoad failed for ekh: %v\n", err)
 	}
