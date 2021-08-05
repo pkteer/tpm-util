@@ -33,12 +33,13 @@ begins an http server.
 ### Example
 
 ```
-# echo 'test secret' | ./bin/macserver import - > ~/tpm_locked_secret.hex
-# ./bin/macserver serv ~/tpm_locked_secret.hex localhost:9999
+# echo '7aac64aabaecd3c63e2cfcda27ce92091ffcf4d858eacdbb215bcac116ac3838' | \
+    ./bin/macserver import - > ~/tpm_test_secret.hex
+# ./bin/macserver serv ~/tpm_test_secret.hex localhost:9999
 
 ## In another window
 # curl -s -X POST -d 'hello world' localhost:9999/hmac | hexdump
-0000000 fc85 9246 f5d6 71b3 0963 e858 a12b b5ed
-0000010 7b34 5d23 ad34 aa17 dcf8 6745 16c9 faae
+0000000 978f fe5c f84a 314d 7b9d 38ee 3587 8a81
+0000010 4964 60cf b10e 70d9 a8a5 2e68 a5e8 1139
 0000020
 ```
