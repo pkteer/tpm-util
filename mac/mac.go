@@ -26,7 +26,7 @@ var defaultKeyParams = tpm2.Public{
 	},
 }
 
-func ImportKey(rwc io.ReadWriter, secret string) (string, error) {
+func ImportKey(rwc io.ReadWriter, secret []byte) (string, error) {
 	pcrSelection := tpm2.PCRSelection{Hash: tpm2.AlgSHA256, PCRs: []int{}}
 	pkh, _, err := tpm2.CreatePrimary(rwc, tpm2.HandleOwner, pcrSelection, "", "", defaultKeyParams)
 	if err != nil {
@@ -43,9 +43,8 @@ func ImportKey(rwc io.ReadWriter, secret string) (string, error) {
 			Hash: tpm2.AlgSHA256,
 		},
 	}
-	hmacKeyBytes := []byte(secret)
 	privInternal, pubArea, _, _, _, err := tpm2.CreateKeyWithSensitive(
-		rwc, pkh, pcrSelection, "", "", public, hmacKeyBytes)
+		rwc, pkh, pcrSelection, "", "", public, secret)
 	if err != nil {
 		return "", fmt.Errorf("Error creating Sensitive %v\n", err)
 	}

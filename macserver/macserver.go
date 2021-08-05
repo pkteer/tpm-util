@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -76,7 +77,15 @@ func hmacServer(t io.ReadWriter, hmacKeyFile string, bind string) {
 }
 
 func hmacImportKey(t io.ReadWriter, hmacKeyFile string) {
-	r, e := mac.ImportKey(t, readFile(hmacKeyFile))
+	keyHex := readFile(hmacKeyFile)
+	keyBytes, e := hex.DecodeString(keyHex)
+	if e != nil {
+		panic(e)
+	}
+	if len(keyBytes) != 32 {
+		panic("key length is not 32 bytes")
+	}
+	r, e := mac.ImportKey(t, keyBytes)
 	if e != nil {
 		panic(e)
 	}
