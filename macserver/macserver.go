@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/google/go-tpm/tpm2"
 	"github.com/pkteer/tpm-util/mac"
@@ -55,13 +56,15 @@ func hmacServer(t io.ReadWriter, hmacKeyFile string, bind string) {
 			fmt.Fprintf(w, "request too long")
 			return
 		}
+		time0 := time.Now()
 		if b, e := hmacer.Hmac(buf[:l]); e != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "error computing hmac: %v", e)
 			return
 		} else {
+			fmt.Printf("hmac computed in data len(%v) in: %v\n", l, time.Since(time0))
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(b))
+			w.Write(b)
 		}
 	})
 	fmt.Fprintf(os.Stderr, "Listening on %s\n", bind)
